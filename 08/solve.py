@@ -33,17 +33,19 @@ class Tree:
         if isinstance(other, Tree):
             return self.height == other.height
         raise TypeError("Incompatible comparison type, can only compare trees")
-    
-    def __le__(self, other):
-        if isinstance(other, Tree):
-            return self.height <= other.height
-        raise TypeError("Incompatible comparison type, can only compare trees")
 
 
-def print_board(board):
+def print_board(board, highlight=None):
     w, h = len(board[0]), len(board)
     for i, j in itertools.product(range(h), range(w)):
-        rich.print(str(board[i][j]), end='\n' if j == w-1 else '')
+        if highlight is None:
+            rich.print(str(board[i][j]), end='\n' if j == w-1 else '')
+
+        if (i, j) == highlight:
+            rich.print(f'[bright_white on black]{board[i][j].height}[/]', end='\n' if j == w-1 else '')
+            continue
+        print(board[i][j].height, end='\n' if j == w-1 else '')
+
 
 
 def read_polyana(lines):
@@ -94,9 +96,10 @@ def solve2(lines):
     board = read_polyana(lines)
     
     W, H = len(board[0]), len(board)
-    w, h = W - 1, H - 1
 
     score = 0
+    best = None
+    old_score = 0
 
     # walk the board
     for i, j in itertools.product(range(H), range(W)):
@@ -111,11 +114,16 @@ def solve2(lines):
             for tree in view:
                 if tree < current:
                     cnt[eye] += 1
-                if tree >= current:
+                else:
                     cnt[eye] += 1
                     break
+        old_score = score
         score = max(score, functools.reduce(operator.mul, cnt.values()))
+        if score != old_score:
+            best = (i, j)
 
+    print(best)
+    print_board(board, highlight=best)
     return score
 
 
