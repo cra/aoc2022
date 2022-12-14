@@ -78,7 +78,7 @@ def update(head, tail):
             # H..    H..
             # ... -> .T.
             # ..T    ...
-            tail += -1 - 1j
+            tail += -1 + 1j
 
     assert any(variants(x(head), y(head), x(tail), y(tail)))
 
@@ -114,85 +114,22 @@ U 20
 """.lstrip()
 
 
-@dataclass
-class Rope:
-    x: int
-    y: int
-    parent: Optional[Rope] = None
-    child: Optional[Rope] = None
 
-    @property
-    def real(self):
-        return self.x
-
-    @property
-    def imag(self):
-        return self.y
-
-    @property
-    def point(self) -> complex:
-        return self.x + self.y*1j
-
-    def __str__(self):
-        return str(self.point)
-
-    def __iadd__(self, other):
-        assert isinstance(other, complex)
-        self.x += other.real
-        self.y += other.imag
-        return self
-
-    def __add__(self, other):
-        assert isinstance(other, (complex, int))
-        return Rope(self.x + other.real, self.y + other.imag)
-    
-    def __sub__(self, other):
-        assert isinstance(other, (complex, int))
-        return Rope(self.x - other.real, self.y - other.imag)
-
-    @property
-    def str_from_here(self):
-        cur = self
-        positions = []
-        while cur.child is not None:
-            positions.append(str(cur))
-            cur = cur.child
-        s = '->'.join(positions)
-        return s
-
-    @property
-    def last_position(self):
-        cur = self
-        while cur.child is not None:
-            cur = cur.child
-        return cur.point
-
-
-def solve2(lines):
-    head = Rope(0, 0, None)
-    cur = head
-    for _ in range(10):
-        child = Rope(0, 0, cur)
-        cur.child = child
-        cur = child
-    
+def solve2(lines):    
     seen = {}
     delta = {'U': 1j, 'D': -1j, 'L': -1+0j, 'R': 1+0j}
+    uzly = [0+0j]*10
     for instr in lines:
-        print("======", instr)
+        print(instr)
         d, c = instr.split()
         for _ in range(int(c)):
-            head += delta[d]
-            cur = head
-            while cur.child is not None:
-                tail = update(cur.point, cur.child.point)
-                cur.child.x, cur.child.y = x(tail), y(tail)
-                cur = cur.child
-            print("->", cur.point)
-            if cur.point not in seen:
-                seen[cur.point] = True
-            print(head.str_from_here)
-            print("-->", head.last_position)
+            uzly[0] += delta[d]
+            for i in range(1, 10):
+                tail = update(head=uzly[i-1], tail=uzly[i])
+                uzly[i] = tail
+            if (cur := uzly[-1]) not in seen:
+                seen[cur] = True
+            print('->'.join(map(str, uzly)))
     return len(seen)
 
 
@@ -200,3 +137,4 @@ print("Test1", solve1(test.splitlines()))
 print("Puzzle1", solve1(open("puzzle_input").readlines()))
 print("Test2-1", solve2(test.splitlines()))
 print("Test2-2", solve2(test2.splitlines()))
+print("Puzzle2", solve2(open("puzzle_input").readlines()))
